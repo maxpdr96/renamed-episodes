@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class RenamedEpisodesApplication {
 
     public static void main(String[] args) {
-        String directoryPath = "/home/maxpdr96/Downloads";
+        String directoryPath = "C:\\Users\\maxqr\\Downloads\\[1temp] - Rakshasa Street (Zhen Hun Jie)-20250104T175030Z-001\\[2temp] - Rakshasa Street (Zhen Hun Jie)";
 
         String[] videoExtensions = {".mp4", ".mkv", ".avi", ".mov"};
 
@@ -53,35 +53,52 @@ public class RenamedEpisodesApplication {
 
     private static Optional<String> matchNameAndEpisode(String input) {
         // Regex para capturar nome, número opcional e número do episódio
-        String regex = ".*?\\[([^\\]]+?)(?: (\\d+))?\\] - Episódio (\\d+)";
 
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        String[] regexPatterns = {
+                ".*?\\[([^\\]]+?)(?: (\\d+))?\\] - Episódio (\\d+)",
+                "\\[Ep\\. (\\d+)(?:-[a-zA-Z0-9]+)?\\] (.+?) - (\\d+)T"
+        };
 
-        if (matcher.find()) {
-            String name = matcher.group(1);           // Nome do arquivo (antes do número)
-            String optionalNumber = matcher.group(2); // Número opcional (pode ser nulo)
-            String episodeNumber = matcher.group(3);  // Número do episódio
+        for (int i = 0; i < regexPatterns.length; i++) {
 
-            System.out.println("Nome: " + name);
-            System.out.println("Número Opcional: " + (optionalNumber != null ? optionalNumber : "Nenhum"));
-            System.out.println("Número do Episódio: " + episodeNumber);
+            Pattern pattern = Pattern.compile(regexPatterns[i]);
+            Matcher matcher = pattern.matcher(input);
 
-            String episodeNumberFormatted = String.format("%03d", Integer.parseInt(episodeNumber));
-            String newFileName = name;
-            if (optionalNumber != null) {
-                String optionalNumberFormatted = String.format("%02d", Integer.parseInt(optionalNumber));
-                newFileName += " - S" + optionalNumberFormatted;
+            if (matcher.find()) {
+                String name;
+                String optionalNumber;
+                String episodeNumber;
+                if (regexPatterns.length != i + 1) {
+                    name = matcher.group(1);           // Nome do arquivo (antes do número)
+                    optionalNumber = matcher.group(2); // Número opcional (pode ser nulo)
+                    episodeNumber = matcher.group(3);  // Número do episódio
+                } else {
+                    name = matcher.group(2);           // Nome do arquivo (antes do número)
+                    optionalNumber = matcher.group(3); // Número opcional (pode ser nulo)
+                    episodeNumber = matcher.group(1);  // Número do episódio
+                }
+
+                System.out.println("Nome: " + name);
+                System.out.println("Número Opcional: " + (optionalNumber != null ? optionalNumber : "Nenhum"));
+                System.out.println("Número do Episódio: " + episodeNumber);
+
+                String episodeNumberFormatted = String.format("%03d", Integer.parseInt(episodeNumber));
+                String newFileName = name;
+                if (optionalNumber != null) {
+                    String optionalNumberFormatted = String.format("%02d", Integer.parseInt(optionalNumber));
+                    newFileName += " - S" + optionalNumberFormatted;
+                } else {
+                    newFileName += " - S" + "01";
+                }
+                newFileName += "E" + episodeNumberFormatted + getFileExtension(input);
+                System.out.printf("New name: %s", newFileName);
+                return Optional.of(newFileName);
+
             } else {
-                newFileName += " - S" + "01";
+                System.out.println("Nenhuma correspondência encontrada!");
             }
-            newFileName += "E" + episodeNumberFormatted + getFileExtension(input);
-            System.out.printf("New name: %s", newFileName);
-            return Optional.of(newFileName);
-
-        } else {
-            System.out.println("Nenhuma correspondência encontrada!");
         }
+
         return Optional.empty();
     }
 
